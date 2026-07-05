@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rebar Weight Calculator — Idea Construction Inc</title>
+<style>
+  :root {
+    --ink: #14181d;
+    --steel: #3a4653;
+    --slate: #6b7885;
+    --paper: #eef1f4;
+    --card: #ffffff;
+    --line: #d4dae0;
+    --safety: #FFB717;      /* IDEA helmet amber */
+    --safety-dk: #d99400;
+    --blue: #1A6197;        /* IDEA wordmark blue */
+    --blue-lt: #2b7ab8;
+    --orange: #E8912A;      /* IDEA subtitle orange */
+    --good: #1f7a4d;
+    --shadow: 0 1px 2px rgba(20,24,29,.06), 0 8px 24px rgba(20,24,29,.06);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.5;
+    padding: 0 20px 60px;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; }
+
+  /* ---- Header ---- */
+  header {
+    display: flex; align-items: center; gap: 16px;
+    padding: 22px 0 20px;
+    border-bottom: 3px solid var(--blue);
+  }
+  .logo-mark {
+    height: 62px; width: auto; flex: none;
+    object-fit: contain;
+  }
+  .brand h1 {
+    font-family: "Arial Black", "Helvetica Neue", Arial, sans-serif;
+    font-size: 30px; letter-spacing: -.5px;
+    color: var(--blue); font-weight: 900; line-height: 1;
+  }
+  .brand p {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 3px;
+    color: var(--orange); font-weight: 700; margin-top: 4px;
+  }
+  .tool-tag {
+    margin-left: auto; text-align: right; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 1.6px; color: var(--slate);
+    font-weight: 600;
+  }
+  .tool-tag strong { display:block; color: var(--blue); font-size: 13px; letter-spacing:.6px; }
+
+  /* ---- Title block ---- */
+  .titleblock { padding: 30px 0 24px; }
+  .eyebrow {
+    display:inline-block; font-size: 11px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--safety-dk);
+    border-left: 3px solid var(--safety); padding-left: 10px; margin-bottom: 12px;
+  }
+  .titleblock h2 {
+    font-family: "Georgia", serif; font-size: 34px; line-height: 1.15; color: var(--ink);
+    max-width: 640px;
+  }
+  .titleblock p { color: var(--steel); margin-top: 12px; max-width: 560px; font-size: 15px; }
+
+  /* ---- Layout ---- */
+  .grid { display: grid; grid-template-columns: 1fr 380px; gap: 22px; align-items: start; }
+
+  .panel {
+    background: var(--card); border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+  }
+  .panel-head {
+    padding: 14px 20px; border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--ink);
+  }
+  .panel-head h3 {
+    font-size: 12px; text-transform: uppercase; letter-spacing: 1.6px;
+    color: #fff; font-weight: 700;
+  }
+  .panel-head .num { font-size: 11px; color: var(--safety); font-weight: 700; letter-spacing:1px; }
+
+  .panel-body { padding: 22px 20px; }
+
+  /* ---- Fields ---- */
+  .field { margin-bottom: 18px; }
+  .field:last-child { margin-bottom: 0; }
+  .field label {
+    display: block; font-size: 12px; font-weight: 600; color: var(--steel);
+    text-transform: uppercase; letter-spacing: .6px; margin-bottom: 6px;
+  }
+  .field .hint { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--slate); }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .combo { display: grid; grid-template-columns: 1fr 88px; gap: 8px; }
+
+  input, select {
+    width: 100%; padding: 11px 12px; font-size: 15px; font-family: inherit;
+    border: 1px solid var(--line); background: #fbfcfd; color: var(--ink);
+    border-radius: 0; -webkit-appearance: none; appearance: none;
+  }
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7885'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center; padding-right: 30px;
+  }
+  input:focus, select:focus {
+    outline: none; border-color: var(--blue-lt);
+    box-shadow: 0 0 0 3px rgba(45,90,142,.15); background:#fff;
+  }
+  .field.wide { grid-column: 1 / -1; }
+
+  /* dimmed slab fields when in direct-weight mode */
+  .field.dimmed { opacity: .4; pointer-events: none; }
+
+  /* ---- Result panel ---- */
+  .result-panel { position: sticky; top: 20px; }
+  .result-head { background: var(--blue); }
+  .result-main {
+    padding: 28px 22px 24px; text-align: center;
+    border-bottom: 1px dashed var(--line);
+    background:
+      linear-gradient(0deg, rgba(242,169,0,.05), rgba(242,169,0,.05));
+  }
+  .result-label { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: var(--slate); font-weight: 700; }
+  .result-value {
+    font-family: "Georgia", serif; font-size: 52px; font-weight: 700; color: var(--ink);
+    line-height: 1.05; margin: 8px 0 2px; letter-spacing: -1px;
+  }
+  .result-unit { font-size: 14px; color: var(--steel); font-weight: 600; }
+  .result-value.dim { color: var(--slate); font-size: 30px; }
+
+  .cost-block {
+    margin-top: 18px; padding-top: 16px; border-top: 2px solid var(--ink);
+  }
+  .cost-label { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: var(--safety-dk); font-weight: 700; }
+  .cost-value {
+    font-family: "Georgia", serif; font-size: 38px; font-weight: 700; color: var(--blue);
+    line-height: 1.1; margin: 6px 0 2px; letter-spacing: -.5px;
+  }
+  .cost-sub { font-size: 12px; color: var(--slate); font-weight: 500; }
+
+  .breakdown { padding: 8px 22px 20px; }
+  .breakdown dl { display: grid; grid-template-columns: 1fr auto; gap: 0; }
+  .breakdown dt {
+    font-size: 13px; color: var(--steel); padding: 9px 0;
+    border-bottom: 1px solid var(--paper);
+  }
+  .breakdown dd {
+    font-size: 13px; color: var(--ink); font-weight: 600; text-align: right;
+    padding: 9px 0; border-bottom: 1px solid var(--paper); font-variant-numeric: tabular-nums;
+  }
+  .breakdown .total dt, .breakdown .total dd {
+    border-bottom: none; padding-top: 12px; font-weight: 700; color: var(--ink);
+  }
+  .breakdown .total dt { color: var(--steel); }
+
+  .note {
+    font-size: 12px; color: var(--slate); line-height: 1.55;
+    padding: 14px 22px 20px; border-top: 1px solid var(--paper);
+  }
+  .note b { color: var(--steel); }
+
+  footer {
+    margin-top: 34px; padding-top: 18px; border-top: 1px solid var(--line);
+    display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: baseline;
+    font-size: 12px; color: var(--slate);
+  }
+  footer .co { font-weight: 700; color: var(--steel); letter-spacing: .3px; }
+  footer .disc { max-width: 620px; }
+
+  @media (max-width: 860px) {
+    .grid { grid-template-columns: 1fr; }
+    .result-panel { position: static; }
+    .titleblock h2 { font-size: 27px; }
+  }
+  @media (max-width: 480px) {
+    body { padding: 0 14px 40px; }
+    .row2 { grid-template-columns: 1fr; }
+    .tool-tag { display:none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <img class="logo-mark" src="data:image/jpeg;base64,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" alt="IDEA Construction logo">
+    <div class="brand">
+      <h1>IDEA</h1>
+      <p>Construction Incorporated</p>
+    </div>
+    <div class="tool-tag">Field Tool<strong>Rebar Estimator</strong></div>
+  </header>
+
+  <div class="titleblock">
+    <span class="eyebrow">Slab Reinforcement</span>
+    <h2>Rebar Weight Calculator</h2>
+    <p>Estimate the total weight and length of a rebar grid mat for a concrete slab — for material orders, load planning, and cost takeoffs.</p>
+  </div>
+
+  <div class="grid">
+
+    <!-- INPUTS -->
+    <div class="panel">
+      <div class="panel-head"><h3>Slab &amp; Grid Inputs</h3><span class="num">STEP 01</span></div>
+      <div class="panel-body">
+
+        <div class="field" id="methodPick">
+          <label style="font-size:14px;color:var(--ink);">What do you want to do?</label>
+          <select id="method" style="font-size:16px;padding:14px 12px;font-weight:600;">
+            <option value="weight" selected>Order rebar by weight (I know the pounds)</option>
+            <option value="slab">Figure out weight from a slab size</option>
+          </select>
+        </div>
+
+        <!-- Shown only for "Order by weight" -->
+        <div class="field" id="weightEntry" style="display:none;background:#fff8ea;border:1px solid var(--safety);padding:16px;margin-top:4px;">
+          <label style="font-size:14px;color:var(--ink);">How many pounds do you want to order?</label>
+          <div class="combo" style="grid-template-columns: 1fr auto;">
+            <input type="number" id="orderInput" placeholder="Type pounds, e.g. 400" min="0" step="any" aria-label="Order weight in pounds" style="font-size:17px;padding:14px 12px;">
+            <span style="display:grid;place-items:center;padding:0 16px;font-weight:700;color:var(--steel);background:#fff;border:1px solid var(--line);border-left:none;">lb</span>
+          </div>
+        </div>
+
+        <div style="height:1px;background:var(--line);margin:18px 0 20px;"></div>
+
+        <div class="field" id="slabDims">
+          <label>Slab Dimensions</label>
+          <div class="row2">
+            <div class="combo">
+              <input type="number" id="length" value="20" min="0" step="any" aria-label="Slab length">
+              <select id="lengthUnit">
+                <option value="0.3048">ft</option>
+                <option value="0.0254">in</option>
+                <option value="0.9144">yd</option>
+                <option value="1">m</option>
+                <option value="0.01">cm</option>
+              </select>
+            </div>
+            <div class="combo">
+              <input type="number" id="width" value="20" min="0" step="any" aria-label="Slab width">
+              <select id="widthUnit">
+                <option value="0.3048">ft</option>
+                <option value="0.0254">in</option>
+                <option value="0.9144">yd</option>
+                <option value="1">m</option>
+                <option value="0.01">cm</option>
+              </select>
+            </div>
+          </div>
+          <span class="hint" style="display:block;margin-top:6px;font-size:11px;">Length &nbsp;/&nbsp; Width</span>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label>Rebar Size</label>
+            <select id="size">
+              <option value="2">#2 — ¼"</option>
+              <option value="3">#3 — ⅜"</option>
+              <option value="4">#4 — ½"</option>
+              <option value="5">#5 — ⅝"</option>
+              <option value="6">#6 — ¾"</option>
+              <option value="7">#7 — ⅞"</option>
+              <option value="8" selected>#8 — 1"</option>
+              <option value="9">#9 — 1⅛"</option>
+              <option value="10">#10 — 1¼"</option>
+              <option value="11">#11 — 1⅜"</option>
+              <option value="14">#14 — 1¾"</option>
+              <option value="16">#16 — 2"</option>
+              <option value="18">#18 — 2¼"</option>
+              <option value="20">#20 — 2½"</option>
+              <option value="custom">Custom / enter manually…</option>
+            </select>
+            <div id="customSize" style="display:none;margin-top:8px;">
+              <label style="font-size:11px;">Weight per foot <span class="hint">(lb/ft)</span></label>
+              <input type="number" id="customPlf" placeholder="e.g. 0.376" min="0" step="any">
+              <span class="hint" style="display:block;margin-top:4px;font-size:10px;">#3 = 0.376 · #4 = 0.668 · #5 = 1.043 · #6 = 1.502</span>
+            </div>
+          </div>
+          <div class="field" id="matsField">
+            <label>Number of Mats</label>
+            <select id="mats">
+              <option>1</option><option>2</option><option>3</option>
+              <option>4</option><option>5</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row2">
+          <div class="field" id="ocField">
+            <label>On-Center Spacing <span class="hint">(in)</span></label>
+            <input type="number" id="onCenter" value="18" min="1" step="any">
+          </div>
+          <div class="field" id="insetField">
+            <label>Inset from Edge <span class="hint">(in)</span></label>
+            <input type="number" id="inset" value="3" min="0" step="any">
+          </div>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label>Stick Length <span class="hint">(standard bar)</span></label>
+            <select id="stick">
+              <option value="20">20 ft</option>
+              <option value="30">30 ft</option>
+              <option value="40" selected>40 ft</option>
+              <option value="60">60 ft</option>
+              <option value="custom">Custom / enter manually…</option>
+            </select>
+            <div id="customStick" style="display:none;margin-top:8px;">
+              <label style="font-size:11px;">Stick length <span class="hint">(ft)</span></label>
+              <input type="number" id="customStickVal" placeholder="e.g. 24" min="1" step="any">
+            </div>
+          </div>
+          <div class="field" id="lapField">
+            <label>Lapping Factor</label>
+            <input type="number" id="lap" value="40" min="0" step="any">
+          </div>
+        </div>
+
+        <div class="row2">
+          <div class="field" id="wasteField">
+            <label>Waste / Lap Allowance <span class="hint">(%)</span></label>
+            <input type="number" id="waste" value="10" min="0" step="any">
+          </div>
+          <div class="field">
+            <label>Price per Pound <span class="hint">(optional)</span></label>
+            <div class="combo" style="grid-template-columns: 40px 1fr;">
+              <span style="display:grid;place-items:center;background:#fbfcfd;border:1px solid var(--line);border-right:none;font-weight:600;color:var(--slate);">$</span>
+              <input type="number" id="price" placeholder="e.g. 0.85" min="0" step="any" aria-label="Price per pound">
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RESULT -->
+    <div class="panel result-panel">
+      <div class="panel-head result-head"><h3>Estimated Total</h3><span class="num">STEP 02</span></div>
+
+      <div class="result-main">
+        <div class="result-label">Rebar Weight to Order</div>
+        <div class="result-value" id="weightOut">—</div>
+        <div class="result-unit">pounds &nbsp;·&nbsp; <span id="tonsOut">—</span> tons</div>
+        <div class="cost-block" id="costBlock" style="display:none;">
+          <div class="cost-label">Estimated Material Cost</div>
+          <div class="cost-value" id="costOut">—</div>
+          <div class="cost-sub" id="costSub">—</div>
+        </div>
+      </div>
+
+      <div class="breakdown">
+        <dl>
+          <dt>Bars — lengthwise runs</dt><dd id="barsL">—</dd>
+          <dt>Bars — widthwise runs</dt><dd id="barsW">—</dd>
+          <dt>Base grid length (with laps)</dt><dd id="lenTotal">—</dd>
+          <dt>Weight per foot</dt><dd id="plf">—</dd>
+          <dt>Base weight (no waste)</dt><dd id="baseWt">—</dd>
+          <dt>Waste allowance</dt><dd id="wasteAdd">—</dd>
+          <dt>Total weight to order</dt><dd id="orderWt">—</dd>
+          <dt>Sticks to buy <span class="hint" id="stickNote"></span></dt><dd id="sticksOut">—</dd>
+          <div class="total" style="display:contents">
+            <dt>Actual weight (whole sticks)</dt><dd id="actualWt">—</dd>
+          </div>
+        </dl>
+      </div>
+
+      <div class="note">
+        <b>How it works.</b> Bars run both directions, inset from each edge and spaced on-center: bars = (grid ÷ spacing) + 1 each way. Runs longer than one stick are lapped (lapping factor × bar diameter per joint). Weight uses standard bar mass per foot; the waste allowance adds a percentage for extra laps and cutoffs. Since rebar sells in whole sticks, the count rounds up — so the actual weight and cost reflect full bars.
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <span class="co">IDEA Construction Incorporated</span>
+    <span class="disc">Estimates are for planning and material takeoff only. Always follow the engineer's structural drawings and specified lap lengths for final placement and ordering.</span>
+  </footer>
+
+</div>
+
+<script>
+  // Standard rebar weight per linear foot (lb/ft) by bar size (US #)
+  const PLF = {
+    2: 0.167, 3: 0.376, 4: 0.668, 5: 1.043, 6: 1.502, 7: 2.044,
+    8: 2.670, 9: 3.400, 10: 4.303, 11: 5.313, 14: 7.650, 16: 8.000,
+    18: 13.600, 20: 16.700
+  };
+
+  const $ = id => document.getElementById(id);
+  const fmt = (n, d=0) => n.toLocaleString('en-US', {minimumFractionDigits:d, maximumFractionDigits:d});
+
+  // Slab fields to hide when ordering straight by weight
+  const slabFieldIds = ['slabDims','matsField','ocField','insetField','lapField','wasteField'];
+  // Every input that should trigger a recalculation
+  const allInputIds = ['length','lengthUnit','width','widthUnit','size','mats','onCenter','inset','stick','lap','waste','price','orderInput','customPlf','customStickVal'];
+
+  allInputIds.forEach(id => $(id).addEventListener('input', render));
+  $('method').addEventListener('change', applyMethod);
+
+  // Show/hide the manual-entry boxes when "Custom" is chosen
+  $('size').addEventListener('change', () => {
+    $('customSize').style.display = ($('size').value === 'custom') ? 'block' : 'none';
+    render();
+  });
+  $('stick').addEventListener('change', () => {
+    $('customStick').style.display = ($('stick').value === 'custom') ? 'block' : 'none';
+    render();
+  });
+
+  // Effective weight-per-foot: from the size table, or the manual box if Custom
+  function getPlf() {
+    if ($('size').value === 'custom') {
+      const v = parseFloat($('customPlf').value);
+      return (isFinite(v) && v > 0) ? v : null;
+    }
+    return PLF[parseInt($('size').value)];
+  }
+  // Effective stick length in feet: from the dropdown, or the manual box if Custom
+  function getStick() {
+    if ($('stick').value === 'custom') {
+      const v = parseFloat($('customStickVal').value);
+      return (isFinite(v) && v > 0) ? v : null;
+    }
+    return parseFloat($('stick').value);
+  }
+
+  function applyMethod() {
+    const byWeight = $('method').value === 'weight';
+    // Show the weight box only in weight mode; show slab fields only in slab mode
+    $('weightEntry').style.display = byWeight ? 'block' : 'none';
+    slabFieldIds.forEach(id => { const el = $(id); if (el) el.style.display = byWeight ? 'none' : ''; });
+    render();
+  }
+  const mode = () => $('method').value; // 'weight' or 'slab'
+
+  // Compute the slab-derived order weight (or null if inputs invalid)
+  function slabWeight() {
+    const L = parseFloat($('length').value) * parseFloat($('lengthUnit').value) / 0.3048;
+    const W = parseFloat($('width').value)  * parseFloat($('widthUnit').value)  / 0.3048;
+    const mats   = parseInt($('mats').value);
+    const ocIn   = parseFloat($('onCenter').value);
+    const insetIn= parseFloat($('inset').value);
+    const stick  = getStick();
+    const lapF   = parseFloat($('lap').value);
+    const plf    = getPlf();
+
+    if (plf == null || stick == null) return null;
+    if (![L,W,ocIn,insetIn].every(v => isFinite(v) && v > 0)) return null;
+
+    // Bar diameter (ft) for lap length. Standard size => number/8 inch.
+    // Custom => estimate diameter from weight-per-foot (steel ≈ 490 lb/ft³).
+    let diaFt;
+    if ($('size').value === 'custom') {
+      diaFt = Math.sqrt(plf / (Math.PI/4 * 490)); // area = plf/density, d = sqrt(4A/π)
+    } else {
+      diaFt = parseInt($('size').value) / 8 / 12;
+    }
+    const oc = ocIn / 12, inset = insetIn / 12, lapLen = lapF * diaFt;
+    const spanL = L - 2*inset, spanW = W - 2*inset;
+    if (spanL <= 0 || spanW <= 0) return null;
+
+    const barsL = Math.floor(spanW / oc) + 1;
+    const barsW = Math.floor(spanL / oc) + 1;
+    const lapsPer = r => Math.max(0, Math.ceil(r / stick) - 1);
+    const rl = r => r + lapsPer(r) * lapLen;
+    const lenPerMat = barsL * rl(spanL) + barsW * rl(spanW);
+    const totalLen = lenPerMat * mats;
+    const baseWeight = totalLen * plf;
+    const wastePct = Math.max(0, parseFloat($('waste').value) || 0);
+    const wasteWeight = baseWeight * wastePct / 100;
+
+    return { barsL, barsW, totalLen, plf, baseWeight, wastePct, wasteWeight,
+             orderWeight: baseWeight + wasteWeight };
+  }
+
+  function render() {
+    const plf   = getPlf();
+    const stick = getStick();
+
+    let orderWeight, s = null;
+
+    if (mode() === 'weight') {
+      orderWeight = parseFloat($('orderInput').value);
+      if (!isFinite(orderWeight) || orderWeight <= 0) return reset();
+      // slab-derived breakdown rows are not applicable in weight mode
+      ['barsL','barsW','lenTotal','baseWt','wasteAdd'].forEach(i => $(i).textContent = '—');
+    } else {
+      s = slabWeight();
+      if (!s) return reset();
+      orderWeight = s.orderWeight;
+      $('barsL').textContent = s.barsL;
+      $('barsW').textContent = s.barsW;
+      $('lenTotal').textContent = fmt(s.totalLen, 1) + ' ft';
+      $('baseWt').textContent = fmt(s.baseWeight) + ' lb';
+      $('wasteAdd').textContent = (s.wastePct > 0 ? '+' + fmt(s.wasteWeight) + ' lb (' + fmt(s.wastePct,0) + '%)' : 'none');
+    }
+
+    if (plf == null || stick == null || stick <= 0) return reset();
+
+    // Headline + shared rows
+    $('weightOut').textContent = fmt(orderWeight);
+    $('weightOut').classList.remove('dim');
+    $('tonsOut').textContent = fmt(orderWeight / 2000, 2);
+    $('plf').textContent = plf.toFixed(3) + ' lb/ft';
+    $('orderWt').textContent = fmt(orderWeight) + ' lb';
+
+    // Sticks — rebar sells in whole bars, round up
+    const stickWt = stick * plf;
+    const sticks  = Math.ceil(orderWeight / stickWt);
+    const actualFt = sticks * stick;
+    const actualWeight = actualFt * plf;
+    $('stickNote').textContent = '(' + fmt(stick, stick % 1 ? 1 : 0) + '-ft bars)';
+    $('sticksOut').textContent = fmt(sticks);
+    $('actualWt').textContent = fmt(actualWeight) + ' lb (' + fmt(actualFt) + ' ft)';
+
+    // Cost — based on the whole-stick weight you actually pay for
+    const price = parseFloat($('price').value);
+    if (isFinite(price) && price > 0) {
+      $('costOut').textContent = '$' + fmt(actualWeight * price, 2);
+      $('costSub').textContent = fmt(actualWeight) + ' lb × $' + price.toFixed(2) + '/lb';
+      $('costBlock').style.display = 'block';
+    } else {
+      $('costBlock').style.display = 'none';
+    }
+  }
+
+  function reset() {
+    $('weightOut').textContent = '—';
+    $('weightOut').classList.add('dim');
+    $('tonsOut').textContent = '—';
+    ['barsL','barsW','lenTotal','plf','baseWt','wasteAdd','orderWt','sticksOut','actualWt'].forEach(i => $(i).textContent = '—');
+    $('stickNote').textContent = '';
+    $('costBlock').style.display = 'none';
+  }
+
+  applyMethod();
+</script>
+</body>
+</html>
